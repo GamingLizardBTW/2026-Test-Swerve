@@ -17,6 +17,9 @@ from wpilib import DriverStation
 from wpimath.geometry import Rotation2d
 from wpimath.units import rotationsToRadians
 
+from wpilib import PS5Controller
+from constants import OP
+
 
 class RobotContainer:
     """
@@ -51,6 +54,7 @@ class RobotContainer:
         self._logger = Telemetry(self._max_speed)
 
         self._joystick = CommandXboxController(0)
+        self.PS5 = PS5Controller(OP.PS5Controller_port)
 
         self.drivetrain = TunerConstants.create_drivetrain()
 
@@ -71,13 +75,13 @@ class RobotContainer:
             self.drivetrain.apply_request(
                 lambda: (
                     self._drive.with_velocity_x(
-                        -self._joystick.getLeftY() * self._max_speed
+                        -self.PS5.getLeftY() * self._max_speed
                     )  # Drive forward with negative Y (forward)
                     .with_velocity_y(
-                        -self._joystick.getLeftX() * self._max_speed
+                        -self.PS5.getLeftX() * self._max_speed
                     )  # Drive left with negative X (left)
                     .with_rotational_rate(
-                        -self._joystick.getRightX() * self._max_angular_rate
+                        -self.PS5.getRightX() * self._max_angular_rate
                     )  # Drive counterclockwise with negative X (left)
                 )
             )
@@ -90,32 +94,32 @@ class RobotContainer:
             self.drivetrain.apply_request(lambda: idle).ignoringDisable(True)
         )
 
-        self._joystick.a().whileTrue(self.drivetrain.apply_request(lambda: self._brake))
-        self._joystick.b().whileTrue(
+        self.PS5.a().whileTrue(self.drivetrain.apply_request(lambda: self._brake))
+        self.PS5.b().whileTrue(
             self.drivetrain.apply_request(
                 lambda: self._point.with_module_direction(
-                    Rotation2d(-self._joystick.getLeftY(), -self._joystick.getLeftX())
+                    Rotation2d(-self.PS5.getLeftY(), -self.PS5.getLeftX())
                 )
             )
         )
 
         # Run SysId routines when holding back/start and X/Y.
         # Note that each routine should be run exactly once in a single log.
-        (self._joystick.back() & self._joystick.y()).whileTrue(
+        (self.PS5.back() & self.PS5.y()).whileTrue(
             self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kForward)
         )
-        (self._joystick.back() & self._joystick.x()).whileTrue(
+        (self.PS5.back() & self.PS5.x()).whileTrue(
             self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kReverse)
         )
-        (self._joystick.start() & self._joystick.y()).whileTrue(
+        (self.PS5.start() & self.PS5.y()).whileTrue(
             self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kForward)
         )
-        (self._joystick.start() & self._joystick.x()).whileTrue(
+        (self.PS5.start() & self.PS5.x()).whileTrue(
             self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kReverse)
         )
 
         # reset the field-centric heading on left bumper press
-        self._joystick.leftBumper().onTrue(
+        self.PS5.getL1Button().onTrue(
             self.drivetrain.runOnce(self.drivetrain.seed_field_centric)
         )
 
