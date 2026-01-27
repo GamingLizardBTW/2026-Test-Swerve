@@ -7,6 +7,8 @@
 import commands2
 from commands2 import cmd
 from commands2.button import CommandXboxController, Trigger
+from wpilib import PS5Controller
+
 from commands2.sysid import SysIdRoutine
 
 from generated.tuner_constants import TunerConstants
@@ -16,6 +18,11 @@ from phoenix6 import swerve
 from wpilib import DriverStation
 from wpimath.geometry import Rotation2d
 from wpimath.units import rotationsToRadians
+
+from pathplannerlib.auto import PathPlannerAuto
+from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands
+from pathplannerlib.path import PathPlannerPath
+from wpilib import SmartDashboard
 
 
 
@@ -58,7 +65,16 @@ class RobotContainer:
         self.drivetrain = TunerConstants.create_drivetrain()
 
         # Configure the button bindings
+        #Path planner commands
+        NamedCommands.registerCommand("example", self.example)
+
+        
+        # Configure Bindings
         self.configureButtonBindings()
+        self.autoChooser = AutoBuilder.buildAutoChooser()
+        SmartDashboard.putData("Auto Chooser", self.autoChooser)
+
+        self.autoChooser.addOption("example", PathPlannerAuto("example"))        
 
     def configureButtonBindings(self) -> None:
         """
@@ -126,29 +142,38 @@ class RobotContainer:
             lambda state: self._logger.telemeterize(state)
         )
 
-    def getAutonomousCommand(self) -> commands2.Command:
+
+    def get_autonomous_command(self):
+        return self.autoChooser.getSelected()
+
+
+
+    #def getAutonomousCommand(self) -> commands2.Command:
         """
         Use this to pass the autonomous command to the main {@link Robot} class.
 
         :returns: the command to run in autonomous
         """
+        return self.autoChooser.getSelected()
+
+    
         # Simple drive forward auton
-        idle = swerve.requests.Idle()
-        return cmd.sequence(
+        #idle = swerve.requests.Idle()
+        #return cmd.sequence(
             # Reset our field centric heading to match the robot
             # facing away from our alliance station wall (0 deg).
-            self.drivetrain.runOnce(
-                lambda: self.drivetrain.seed_field_centric(Rotation2d.fromDegrees(0))
-            ),
+            #self.drivetrain.runOnce(
+                #lambda: self.drivetrain.seed_field_centric(Rotation2d.fromDegrees(0))
+            #),
             # Then slowly drive forward (away from us) for 5 seconds.
-            self.drivetrain.apply_request(
-                lambda: (
-                    self._drive.with_velocity_x(0.5)
-                    .with_velocity_y(0)
-                    .with_rotational_rate(0)
-                )
-            )
-            .withTimeout(5.0),
+            #self.drivetrain.apply_request(
+                #lambda: (
+                    #self._drive.with_velocity_x(0.5)
+                    #.with_velocity_y(0)
+                    #.with_rotational_rate(0)
+                #)
+            #)
+            #.withTimeout(5.0),
             # Finally idle for the rest of auton
-            self.drivetrain.apply_request(lambda: idle)
-        )
+            #self.drivetrain.apply_request(lambda: idle)
+        #)
