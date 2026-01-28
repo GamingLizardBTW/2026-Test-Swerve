@@ -66,7 +66,7 @@ class RobotContainer:
 
         # Configure the button bindings
         #Path planner commands
-        NamedCommands.registerCommand("example", self.example)
+        #NamedCommands.registerCommand("example", self.example)
 
         
         # Configure Bindings
@@ -74,7 +74,7 @@ class RobotContainer:
         self.autoChooser = AutoBuilder.buildAutoChooser()
         SmartDashboard.putData("Auto Chooser", self.autoChooser)
 
-        self.autoChooser.addOption("example", PathPlannerAuto("example"))        
+        self.autoChooser.addOption("test auto2", PathPlannerAuto("test auto2"))        
 
     def configureButtonBindings(self) -> None:
         """
