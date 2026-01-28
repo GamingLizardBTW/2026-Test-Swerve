@@ -16,8 +16,6 @@ import telemetry
 
 from wpimath.kinematics import ChassisSpeeds
 
-import generated.tuner_constants
-
 
 from generated.tuner_constants import TunerSwerveDrivetrain
 
@@ -254,10 +252,7 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
             #self.odometry.resetPose,
             self.reset_pose, # Method to reset odometry (will be called if your auto has a starting pose)
             
-            lambda: self.kinematics.toChassisSpeeds((self.front_right.getState(),
-                                                        self.front_left.getState(),
-                                                        self.back_left.getState(),
-                                                        self.back_right.getState())), # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+            lambda:self.get_state().speeds, # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
 
             lambda speeds, feedforwards: self.driveRobotRelative(speeds), # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
             PPHolonomicDriveController( # PPHolonomicController is the built in path following controller for holonomic drive trains
