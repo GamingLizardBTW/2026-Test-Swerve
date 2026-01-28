@@ -236,12 +236,12 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
         if utils.is_simulation():
             self._start_sim_thread()
 
-        def getRobotRelativeSpeeds(self) -> ChassisSpeeds:
-            """
-            Returns the current robot-relative chassis speeds.
-            Required by PathPlanner AutoBuilder.
-            """
-            return self.get_current_robot_chassis_speeds()
+    def getRobotRelativeSpeeds(self) -> ChassisSpeeds:
+        """
+        Returns the current robot-relative chassis speeds.
+        Required by PathPlanner AutoBuilder.
+        """
+        return self.get_current_robot_chassis_speeds()
 
 
         config = RobotConfig.fromGUISettings()
