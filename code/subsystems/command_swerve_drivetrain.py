@@ -12,6 +12,10 @@ from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.config import RobotConfig, PIDConstants
 from wpilib import DriverStation
 
+import telemetry
+
+from wpimath.kinematics import ChassisSpeeds
+
 
 from generated.tuner_constants import TunerSwerveDrivetrain
 
@@ -232,6 +236,14 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
         if utils.is_simulation():
             self._start_sim_thread()
 
+        def getRobotRelativeSpeeds(self) -> ChassisSpeeds:
+            """
+            Returns the current robot-relative chassis speeds.
+            Required by PathPlanner AutoBuilder.
+            """
+            return self.get_current_robot_chassis_speeds()
+
+
         config = RobotConfig.fromGUISettings()
 
 
@@ -252,7 +264,9 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
             ),
             
             config, # The robot configuration
+
             self.shouldFlipPath, # Supplier to control path flipping based on alliance color
+
             self # Reference to this subsystem to set requirements
         )
 
