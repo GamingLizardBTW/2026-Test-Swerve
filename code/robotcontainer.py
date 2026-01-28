@@ -72,7 +72,8 @@ class RobotContainer:
         
         # Configure Bindings
         self.configureButtonBindings()
-        self.autoChooser = AutoBuilder.buildAutoChooser()
+        self.autoChooser = AutoBuilder.buildAutoChooser("Test auto")
+        #self.autoChooser = AutoBuilder.buildAutoChooser()
         SmartDashboard.putData("Auto Chooser", self.autoChooser)
 
         self.autoChooser.addOption("Test auto", PathPlannerAuto("Test auto"))        
