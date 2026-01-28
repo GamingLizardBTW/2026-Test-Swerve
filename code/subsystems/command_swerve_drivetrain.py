@@ -254,7 +254,7 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
             
             lambda:self.get_state().speeds, # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
 
-            lambda speeds, feedforwards: self.driveRobotRelative(speeds), # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
+            lambda speeds, feedforwards: self.driveRobotRelative(speeds, feedforwards), # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
             PPHolonomicDriveController( # PPHolonomicController is the built in path following controller for holonomic drive trains
                 PIDConstants(5.0, 0.0, 0.0), # Translation PID constants
                 PIDConstants(5.0, 0.0, 0.0) # Rotation PID constants
@@ -267,7 +267,7 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
             self # Reference to this subsystem to set requirements
         )
         
-    def driveRobotRelative(self, robotRelativeSpeed: ChassisSpeeds, feedForward) -> None:
+    def driveRobotRelative(self, robotRelativeSpeed: ChassisSpeeds, feedforwards) -> None:
         swerveModuleState = self.kinematics.toSwerveModuleStates(ChassisSpeeds.discretize(robotRelativeSpeed, 0.02))
 
         self.modules[0].setDesiredState(swerveModuleState[0])
