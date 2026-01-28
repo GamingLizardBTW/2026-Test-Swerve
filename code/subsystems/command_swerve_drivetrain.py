@@ -42,7 +42,7 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
         Returns the current robot-relative chassis speeds.
         Required by PathPlanner AutoBuilder.
         """
-        return self.get_current_robot_chassis_speeds()
+        return self.get_state().chassis_speeds
     
 
     @overload
