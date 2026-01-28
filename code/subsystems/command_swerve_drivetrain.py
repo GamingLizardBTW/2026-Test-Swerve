@@ -37,6 +37,14 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
     _RED_ALLIANCE_PERSPECTIVE_ROTATION = Rotation2d.fromDegrees(180)
     """Red alliance sees forward as 180 degrees (toward blue alliance wall)"""
 
+    def getRobotRelativeSpeeds(self) -> ChassisSpeeds:
+            """
+            Returns the current robot-relative chassis speeds.
+            Required by PathPlanner AutoBuilder.
+            """
+            return self.get_current_robot_chassis_speeds()
+    
+    
     @overload
     def __init__(
         self,
@@ -143,6 +151,7 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
         TunerSwerveDrivetrain.__init__(
             self, drivetrain_constants, arg0, arg1, arg2, arg3
         )
+        
 
         self._sim_notifier: Notifier | None = None
         self._last_sim_time: units.second = 0.0
@@ -236,13 +245,6 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
         if utils.is_simulation():
             self._start_sim_thread()
 
-    def getRobotRelativeSpeeds(self) -> ChassisSpeeds:
-        """
-        Returns the current robot-relative chassis speeds.
-        Required by PathPlanner AutoBuilder.
-        """
-        return self.get_current_robot_chassis_speeds()
-
 
         config = RobotConfig.fromGUISettings()
 
@@ -254,8 +256,8 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
             
             #self.odometry.resetPose,
             self.reset_pose, # Method to reset odometry (will be called if your auto has a starting pose)
-
-            self.getRobotRelativeSpeeds(), # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+            
+            self.getRobotRelativeSpeeds, # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
 
             lambda speeds, feedforwards: self.driveRobotRelative(speeds), # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
             PPHolonomicDriveController( # PPHolonomicController is the built in path following controller for holonomic drive trains
