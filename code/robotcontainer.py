@@ -60,7 +60,8 @@ class RobotContainer:
         self._logger = Telemetry(self._max_speed)
 
         self._joystick = CommandXboxController(0)
-        #self.PS5 = PS5Controller(PS5Controller_port)
+        
+        self.ps5 = PS5Controller(0)
 
         self.drivetrain = TunerConstants.create_drivetrain()
 
@@ -85,6 +86,7 @@ class RobotContainer:
 
         # Note that X is defined as forward according to WPILib convention,
         # and Y is defined as to the left according to WPILib convention.
+        # XBOX
         self.drivetrain.setDefaultCommand(
             # Drivetrain will execute this command periodically
             self.drivetrain.apply_request(
@@ -102,6 +104,7 @@ class RobotContainer:
             )
         )
 
+
         # Idle while the robot is disabled. This ensures the configured
         # neutral mode is applied to the drive motors while disabled.
         idle = swerve.requests.Idle()
@@ -109,39 +112,59 @@ class RobotContainer:
             self.drivetrain.apply_request(lambda: idle).ignoringDisable(True)
         )
 
-        self._joystick.a().whileTrue(self.drivetrain.apply_request(lambda: self._brake))
+        self._joystick.a().whileTrue(self.drivetrain.apply_request(lambda: self._brake))        
         self._joystick.b().whileTrue(
             self.drivetrain.apply_request(
                 lambda: self._point.with_module_direction(
-                    Rotation2d(-self._joystick.getLeftY(), -self._joystick.getLeftX())
+                    #Rotation2d(-self._joystick.getLeftY(), -self._joystick.getLeftX())
                 )
             )
         )
 
+
+
+
         # Run SysId routines when holding back/start and X/Y.
         # Note that each routine should be run exactly once in a single log.
-        (self._joystick.back() & self._joystick.y()).whileTrue(
-            self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kForward)
-        )
-        (self._joystick.back() & self._joystick.x()).whileTrue(
-            self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kReverse)
-        )
-        (self._joystick.start() & self._joystick.y()).whileTrue(
-            self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kForward)
-        )
-        (self._joystick.start() & self._joystick.x()).whileTrue(
-            self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kReverse)
-        )
+        #(self._joystick.back() & self._joystick.y()).whileTrue(
+        #    self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kForward)
+        #)
+        #(self._joystick.back() & self._joystick.x()).whileTrue(
+        #    self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kReverse)
+        #)
+        #(self._joystick.start() & self._joystick.y()).whileTrue(
+        #    self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kForward)
+        #)
+        #(self._joystick.start() & self._joystick.x()).whileTrue(
+        #    self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kReverse)
+        #)
+
+
+        Trigger(self.ps5.getCreateButton).and_(
+        Trigger(self.ps5.getTriangleButton)).whileTrue(self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kForward))
+
+        Trigger(self.ps5.getCreateButton).and_(
+        Trigger(self.ps5.getSquareButton)).whileTrue(self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kReverse))
+
+        Trigger(self.ps5.getOptionsButton).and_(
+        Trigger(self.ps5.getTriangleButton)).whileTrue(self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kForward))
+
+        Trigger(self.ps5.getOptionsButton).and_(
+        Trigger(self.ps5.getSquareButton)).whileTrue(self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kReverse))
+
 
         # reset the field-centric heading on left bumper press
-        self._joystick.leftBumper().onTrue(
-            self.drivetrain.runOnce(self.drivetrain.seed_field_centric)
-        )
+        #self._joystick.leftBumper().onTrue(
+            #self.drivetrain.runOnce(self.drivetrain.seed_field_centric)
+        #)
+        
+        Trigger(self.ps5.getL1Button).onTrue(
+        self.drivetrain.runOnce(self.drivetrain.seed_field_centric))
+        
 
         self.drivetrain.register_telemetry(
             lambda state: self._logger.telemeterize(state)
         )
-
 
     def get_autonomous_command(self):
         return self.autoChooser.getSelected()

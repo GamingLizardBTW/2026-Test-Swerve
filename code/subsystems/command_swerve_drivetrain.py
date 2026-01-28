@@ -38,13 +38,13 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
     """Red alliance sees forward as 180 degrees (toward blue alliance wall)"""
 
     def getRobotRelativeSpeeds(self) -> ChassisSpeeds:
-            """
-            Returns the current robot-relative chassis speeds.
-            Required by PathPlanner AutoBuilder.
-            """
-            return self.get_current_robot_chassis_speeds()
+        """
+        Returns the current robot-relative chassis speeds.
+        Required by PathPlanner AutoBuilder.
+        """
+        return self.get_current_robot_chassis_speeds()
     
-    
+
     @overload
     def __init__(
         self,
