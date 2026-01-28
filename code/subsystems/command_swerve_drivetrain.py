@@ -266,6 +266,16 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
 
             self # Reference to this subsystem to set requirements
         )
+        
+    def driveRobotRelative(self, robotRelativeSpeed: ChassisSpeeds, feedForward) -> None:
+        swerveModuleState = self.kinematics.toSwerveModuleStates(ChassisSpeeds.discretize(robotRelativeSpeed, 0.02))
+
+        self.modules[0].setDesiredState(swerveModuleState[0])
+        self.modules[1].setDesiredState(swerveModuleState[1])
+        self.modules[2].setDesiredState(swerveModuleState[2])
+        self.modules[3].setDesiredState(swerveModuleState[3])
+        
+        self.showRobotPose()
 
     def shouldFlipPath(self) -> bool:
         # Boolean supplier that controls when the path will be mirrored for the red alliance
