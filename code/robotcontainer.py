@@ -192,7 +192,7 @@ class RobotContainer:
         )
 
 
-    def get_autonomous_command(self):
+    def getAutonomousCommand(self) -> commands2.Command:
         return self.autoChooser.getSelected()
 
 
