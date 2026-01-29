@@ -49,7 +49,7 @@ class RobotContainer:
             0.75
         )  # 3/4 of a rotation per second max angular velocity
 
-        # Setting up bindings for necessary control of the swerve drive platform
+        #Setting up bindings for necessary control of the swerve drive platform
         self._drive = (
             swerve.requests.FieldCentric()
             .with_deadband(self._max_speed * 0.1)
@@ -60,12 +60,12 @@ class RobotContainer:
                 swerve.SwerveModule.DriveRequestType.OPEN_LOOP_VOLTAGE
             )  # Use open-loop control for drive motors
         )
-        self._brake = swerve.requests.SwerveDriveBrake()
-        self._point = swerve.requests.PointWheelsAt()
+        # self._brake = swerve.requests.SwerveDriveBrake()
+        # self._point = swerve.requests.PointWheelsAt()
 
-        self._applyrobotspeeds = swerve.requests.ApplyRobotSpeeds()
+        #self._applyrobotspeeds = swerve.requests.ApplyRobotSpeeds()
 
-        self._logger = Telemetry(self._max_speed)
+        #self._logger = Telemetry(self._max_speed)
 
         self._joystick = CommandXboxController(0)
         
@@ -73,20 +73,20 @@ class RobotContainer:
 
         self.drivetrain = TunerConstants.create_drivetrain()
 
-        self.set_up_auto()
+        # self.set_up_auto()
 
-        # Configure the button bindings
-        #Path planner commands
-        #NamedCommands.registerCommand("example", self.example)
+        # # Configure the button bindings
+        # #Path planner commands
+        # #NamedCommands.registerCommand("example", self.example)
 
         
-        # Configure Bindings
-        self.configureButtonBindings()
-        self.autoChooser = AutoBuilder.buildAutoChooser("Test auto")
-        #self.autoChooser = AutoBuilder.buildAutoChooser()
-        SmartDashboard.putData("Auto Chooser", self.autoChooser)
+        # # Configure Bindings
+        # self.configureButtonBindings()
+        # self.autoChooser = AutoBuilder.buildAutoChooser("Test auto")
+        # #self.autoChooser = AutoBuilder.buildAutoChooser()
+        # SmartDashboard.putData("Auto Chooser", self.autoChooser)
 
-        self.autoChooser.addOption("Test auto", PathPlannerAuto("Test auto"))        
+        # self.autoChooser.addOption("Test auto", PathPlannerAuto("Test auto"))        
 
     def set_up_auto(self):
 
