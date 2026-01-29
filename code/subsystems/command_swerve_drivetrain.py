@@ -241,47 +241,6 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
             self._start_sim_thread()
 
 
-        config = RobotConfig.fromGUISettings()
-
-
-        AutoBuilder.configure(
-
-            lambda: self.sample_pose_at(utils.get_current_time_seconds()),
-            #self.getRobotPose, # Robot pose supplier
-            
-            #self.odometry.resetPose,
-            self.reset_pose, # Method to reset odometry (will be called if your auto has a starting pose)
-            
-            lambda:self.get_state().speeds, # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-
-            lambda speeds, feedforwards: self.driveRobotRelative(speeds, feedforwards), # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
-            PPHolonomicDriveController( # PPHolonomicController is the built in path following controller for holonomic drive trains
-                PIDConstants(5.0, 0.0, 0.0), # Translation PID constants
-                PIDConstants(5.0, 0.0, 0.0) # Rotation PID constants
-            ),
-            
-            config, # The robot configuration
-
-            self.shouldFlipPath, # Supplier to control path flipping based on alliance color
-
-            self # Reference to this subsystem to set requirements
-        )
-        
-    def driveRobotRelative(self, robotRelativeSpeed: ChassisSpeeds, feedforwards) -> None:
-        swerveModuleState = self.kinematics.toSwerveModuleStates(ChassisSpeeds.discretize(robotRelativeSpeed, 0.02))
-
-        self.modules[0].setDesiredState(swerveModuleState[0])
-        self.modules[1].setDesiredState(swerveModuleState[1])
-        self.modules[2].setDesiredState(swerveModuleState[2])
-        self.modules[3].setDesiredState(swerveModuleState[3])
-        
-        self.showRobotPose()
-
-    def shouldFlipPath(self) -> bool:
-        # Boolean supplier that controls when the path will be mirrored for the red alliance
-        # This will flip the path being followed to the red side of the field.
-        # THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-        return DriverStation.getAlliance() == DriverStation.Alliance.kRed
 
     def apply_request(
         self, request: Callable[[], swerve.requests.SwerveRequest]
