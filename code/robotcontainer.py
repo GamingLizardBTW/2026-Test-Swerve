@@ -95,7 +95,8 @@ class RobotContainer:
 
         AutoBuilder.configure(
 
-            lambda: self.drivetrain.sample_pose_at(utils.get_current_time_seconds()), # Robot pose supplier
+            #lambda: self.drivetrain.sample_pose_at(utils.get_current_time_seconds()), # Robot pose supplier
+            lambda: self.drivetrain.get_state().pose,
             
             #self.odometry.resetPose,
             self.drivetrain.reset_pose, # Method to reset odometry (will be called if your auto has a starting pose)
