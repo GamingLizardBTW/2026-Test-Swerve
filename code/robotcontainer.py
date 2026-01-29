@@ -19,10 +19,16 @@ from wpilib import DriverStation
 from wpimath.geometry import Rotation2d
 from wpimath.units import rotationsToRadians
 
-from pathplannerlib.auto import PathPlannerAuto
+#Pathplanner imports
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands
 from pathplannerlib.path import PathPlannerPath
-from wpilib import SmartDashboard
+from pathplannerlib.controller import PPHolonomicDriveController
+from pathplannerlib.config import RobotConfig, PIDConstants
+from wpilib import SmartDashboard, DriverStation
+from phoenix6 import SignalLogger, swerve, units, utils
+
+#Subsystems
+import subsystems.command_swerve_drivetrain
 
 
 
@@ -57,6 +63,8 @@ class RobotContainer:
         self._brake = swerve.requests.SwerveDriveBrake()
         self._point = swerve.requests.PointWheelsAt()
 
+        self._applyrobotspeeds = swerve.requests.ApplyRobotSpeeds()
+
         self._logger = Telemetry(self._max_speed)
 
         self._joystick = CommandXboxController(0)
@@ -64,6 +72,8 @@ class RobotContainer:
         #self.ps5 = PS5Controller(0)
 
         self.drivetrain = TunerConstants.create_drivetrain()
+
+        self.set_up_auto()
 
         # Configure the button bindings
         #Path planner commands
@@ -77,6 +87,43 @@ class RobotContainer:
         SmartDashboard.putData("Auto Chooser", self.autoChooser)
 
         self.autoChooser.addOption("Test auto", PathPlannerAuto("Test auto"))        
+
+    def set_up_auto(self):
+
+        config = RobotConfig.fromGUISettings()
+
+
+        AutoBuilder.configure(
+
+            lambda: self.drivetrain.sample_pose_at(utils.get_current_time_seconds()), # Robot pose supplier
+            
+            #self.odometry.resetPose,
+            self.drivetrain.reset_pose, # Method to reset odometry (will be called if your auto has a starting pose)
+            
+            lambda:self.drivetrain.get_state().speeds, # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+
+            lambda speeds, feedforwards: self.drivetrain.apply_request(
+                self._applyrobotspeeds.with_speeds(speeds).with_wheel_force_feedforwards_x(feedforwards),
+            ), # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
+
+            PPHolonomicDriveController( # PPHolonomicController is the built in path following controller for holonomic drive trains
+                PIDConstants(5.0, 0.0, 0.0), # Translation PID constants
+                PIDConstants(5.0, 0.0, 0.0) # Rotation PID constants
+            ),
+            
+            config, # The robot configuration
+
+            self.shouldFlipPath, # Supplier to control path flipping based on alliance color
+
+            self # Reference to this subsystem to set requirements  
+        )
+
+    def shouldFlipPath(self) -> bool:
+        # Boolean supplier that controls when the path will be mirrored for the red alliance
+        # This will flip the path being followed to the red side of the field.
+        # THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+        return DriverStation.getAlliance() == DriverStation.Alliance.kRed
+    
 
     def configureButtonBindings(self) -> None:
         """
@@ -104,22 +151,7 @@ class RobotContainer:
                 )
             )
         )
-        #self.drivetrain.setDefaultCommand(
-            # Drivetrain will execute this command periodically
-            #self.drivetrain.apply_request(
-                #lambda: (
-                    #self._drive.with_velocity_x(
-                        #-self.ps5.getLeftY() * self._max_speed
-                    #)  # Drive forward with negative Y (forward)
-                    #.with_velocity_y(
-                        #-self.ps5.getLeftX() * self._max_speed
-                    #)  # Drive left with negative X (left)
-                    #.with_rotational_rate(
-                        #-self.ps5.getRightX() * self._max_angular_rate
-                    #)  # Drive counterclockwise with negative X (left)
-                #)
-            #)
-       # )
+
 
         # Idle while the robot is disabled. This ensures the configured
         # neutral mode is applied to the drive motors while disabled.
@@ -137,17 +169,6 @@ class RobotContainer:
             )
         )
 
-        #Trigger(lambda:self.ps5.getCrossButton).whileTrue(self.drivetrain.apply_request(lambda: self._brake))
-        #Trigger(self.ps5.getCircleButton).whileTrue(
-        #self.drivetrain.apply_request(
-            #lambda: self._point.with_module_direction(
-                #Rotation2d(
-                    #-self.ps5.getLeftY(),
-                    #-self.ps5.getLeftX()
-                #)
-            #)
-        #)
-    #)
 
 
         # Run SysId routines when holding back/start and X/Y.
@@ -166,27 +187,10 @@ class RobotContainer:
         )
 
 
-        #Trigger(self.ps5.getCreateButton).and_(
-        #Trigger(self.ps5.getTriangleButton)).whileTrue(self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kForward))
-
-        #Trigger(self.ps5.getCreateButton).and_(
-        #Trigger(self.ps5.getSquareButton)).whileTrue(self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kReverse))
-
-        #Trigger(self.ps5.getOptionsButton).and_(
-        #Trigger(self.ps5.getTriangleButton)).whileTrue(self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kForward))
-
-        #Trigger(self.ps5.getOptionsButton).and_(
-        #Trigger(self.ps5.getSquareButton)).whileTrue(self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kReverse))
-
-
         # reset the field-centric heading on left bumper press
         self._joystick.leftBumper().onTrue(
             self.drivetrain.runOnce(self.drivetrain.seed_field_centric)
-        )
-        
-        #Trigger(self.ps5.getL1Button).onTrue(
-        #self.drivetrain.runOnce(self.drivetrain.seed_field_centric))
-        
+        )  
 
         self.drivetrain.register_telemetry(
             lambda state: self._logger.telemeterize(state)
@@ -204,8 +208,6 @@ class RobotContainer:
 
         :returns: the command to run in autonomous
         """
-        return self.autoChooser.getSelected()
-
     
         # Simple drive forward auton
         #idle = swerve.requests.Idle()
