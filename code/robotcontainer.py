@@ -103,7 +103,7 @@ class RobotContainer:
             lambda:self.drivetrain.get_state().speeds, # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
 
             lambda speeds, feedforwards: self.drivetrain.apply_request(
-                self._applyrobotspeeds.with_speeds(speeds).with_wheel_force_feedforwards_x(feedforwards),
+                self._applyrobotspeeds.with_speeds(speeds),
             ), # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
 
             PPHolonomicDriveController( # PPHolonomicController is the built in path following controller for holonomic drive trains
