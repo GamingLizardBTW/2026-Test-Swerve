@@ -11,6 +11,10 @@ from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.config import RobotConfig, PIDConstants
 from wpilib import DriverStation
+from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands
+from pathplannerlib.path import PathPlannerPath
+from pathplannerlib.controller import PPHolonomicDriveController
+from pathplannerlib.config import RobotConfig, PIDConstants
 
 import telemetry
 
@@ -239,6 +243,46 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
 
         if utils.is_simulation():
             self._start_sim_thread()
+
+        #self.checkifautoconfigured()
+
+    def checkifautoconfigured(self):
+        config = RobotConfig.fromGUISettings()
+
+        self._applyrobotspeeds = swerve.requests.ApplyRobotSpeeds()
+
+        if not AutoBuilder.isConfigured():
+            AutoBuilder.configure(
+
+                #lambda: self.drivetrain.sample_pose_at(utils.get_current_time_seconds()), # Robot pose supplier
+                lambda: self.get_state().pose,
+            
+                #self.odometry.resetPose,
+                self.reset_pose, # Method to reset odometry (will be called if your auto has a starting pose)
+            
+                lambda:self.get_state().speeds, # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+
+                lambda speeds, feedforwards: self.apply_request(
+                    self._applyrobotspeeds.with_speeds(speeds),
+                ), # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
+
+                PPHolonomicDriveController( # PPHolonomicController is the built in path following controller for holonomic drive trains
+                    PIDConstants(5.0, 0.0, 0.0), # Translation PID constants
+                    PIDConstants(5.0, 0.0, 0.0) # Rotation PID constants
+            ),
+            
+            config, # The robot configuration
+
+            self.shouldFlipPath, # Supplier to control path flipping based on alliance color
+
+            self # Reference to this subsystem to set requirements  
+        )
+
+    def shouldFlipPath(self) -> bool:
+        # Boolean supplier that controls when the path will be mirrored for the red alliance
+        # This will flip the path being followed to the red side of the field.
+        # THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+        return DriverStation.getAlliance() == DriverStation.Alliance.kRed
 
 
 
