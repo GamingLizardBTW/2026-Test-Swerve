@@ -5,7 +5,7 @@
 #
 
 import commands2
-from commands2 import cmd
+from commands2 import cmd, InstantCommand
 from commands2.button import CommandXboxController, Trigger
 from wpilib import PS5Controller
 
@@ -18,6 +18,8 @@ from phoenix6 import swerve
 from wpilib import DriverStation
 from wpimath.geometry import Rotation2d
 from wpimath.units import rotationsToRadians
+import math
+from wpimath.kinematics import ChassisSpeeds
 
 #Pathplanner imports
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands
@@ -60,70 +62,35 @@ class RobotContainer:
                 swerve.SwerveModule.DriveRequestType.OPEN_LOOP_VOLTAGE
             )  # Use open-loop control for drive motors
         )
-        # self._brake = swerve.requests.SwerveDriveBrake()
-        # self._point = swerve.requests.PointWheelsAt()
+        self._brake = swerve.requests.SwerveDriveBrake()
+        self._point = swerve.requests.PointWheelsAt()
 
-        #self._applyrobotspeeds = swerve.requests.ApplyRobotSpeeds()
+        self._applyrobotspeeds = swerve.requests.ApplyRobotSpeeds()
 
-        #self._logger = Telemetry(self._max_speed)
+        self._logger = Telemetry(self._max_speed)
 
         self._joystick = CommandXboxController(0)
         
-        #self.ps5 = PS5Controller(0)
+        #self.ps5 = PS5Controller(1)
 
         self.drivetrain = TunerConstants.create_drivetrain()
 
-        # self.set_up_auto()
+        self.set_up_auto()
 
-        # # Configure the button bindings
-        # #Path planner commands
-        # #NamedCommands.registerCommand("example", self.example)
+        # Configure the button bindings
+        #Path planner commands
+        #NamedCommands.registerCommand("example", self.example)
 
         
-        # # Configure Bindings
-        # self.configureButtonBindings()
-        # self.autoChooser = AutoBuilder.buildAutoChooser("Test auto")
-        # #self.autoChooser = AutoBuilder.buildAutoChooser()
-        # SmartDashboard.putData("Auto Chooser", self.autoChooser)
+        # Configure Bindings
+        self.configureButtonBindings()
+        self.autoChooser = AutoBuilder.buildAutoChooser("Test auto")
+        #self.autoChooser = AutoBuilder.buildAutoChooser()
+        SmartDashboard.putData("Auto Chooser", self.autoChooser)
 
-        # self.autoChooser.addOption("Test auto", PathPlannerAuto("Test auto"))        
-
-    def set_up_auto(self):
-
-        config = RobotConfig.fromGUISettings()
+        self.autoChooser.addOption("Test auto", PathPlannerAuto("Test auto"))        
 
 
-        AutoBuilder.configure(
-
-            #lambda: self.drivetrain.sample_pose_at(utils.get_current_time_seconds()), # Robot pose supplier
-            lambda: self.drivetrain.get_state().pose,
-            
-            #self.odometry.resetPose,
-            self.drivetrain.reset_pose, # Method to reset odometry (will be called if your auto has a starting pose)
-            
-            lambda:self.drivetrain.get_state().speeds, # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-
-            lambda speeds, feedforwards: self.drivetrain.apply_request(
-                self._applyrobotspeeds.with_speeds(speeds),
-            ), # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
-
-            PPHolonomicDriveController( # PPHolonomicController is the built in path following controller for holonomic drive trains
-                PIDConstants(5.0, 0.0, 0.0), # Translation PID constants
-                PIDConstants(5.0, 0.0, 0.0) # Rotation PID constants
-            ),
-            
-            config, # The robot configuration
-
-            self.shouldFlipPath, # Supplier to control path flipping based on alliance color
-
-            self # Reference to this subsystem to set requirements  
-        )
-
-    def shouldFlipPath(self) -> bool:
-        # Boolean supplier that controls when the path will be mirrored for the red alliance
-        # This will flip the path being followed to the red side of the field.
-        # THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-        return DriverStation.getAlliance() == DriverStation.Alliance.kRed
     
 
     def configureButtonBindings(self) -> None:
@@ -197,36 +164,44 @@ class RobotContainer:
             lambda state: self._logger.telemeterize(state)
         )
 
+    
+    def getAutonomousCommand(self) -> commands2.Command:
+        return InstantCommand(
+            lambda: DriverStation.reportWarning(
+                "Autonomous command started",
+                False
+            )
+        )   
 
-    #def getAutonomousCommand(self) -> commands2.Command:
+
         #return self.autoChooser.getSelected()
 
 
 
-    def getAutonomousCommand(self) -> commands2.Command:
-        """
-        Use this to pass the autonomous command to the main {@link Robot} class.
+    # def getAutonomousCommand(self) -> commands2.Command:
+    #     """
+    #     Use this to pass the autonomous command to the main {@link Robot} class.
 
-        :returns: the command to run in autonomous
-        """
+    #     :returns: the command to run in autonomous
+    #     """
     
-         #Simple drive forward auton
-        idle = swerve.requests.Idle()
-        return cmd.sequence(
-            # Reset our field centric heading to match the robot
-            # facing away from our alliance station wall (0 deg).
-            self.drivetrain.runOnce(
-                lambda: self.drivetrain.seed_field_centric(Rotation2d.fromDegrees(0))
-            ),
-            # Then slowly drive forward (away from us) for 5 seconds.
-            self.drivetrain.apply_request(
-                lambda: (
-                    self._drive.with_velocity_x(0.5)
-                    .with_velocity_y(0)
-                    .with_rotational_rate(0)
-                )
-            )
-            .withTimeout(5.0),
-            # Finally idle for the rest of auton
-            self.drivetrain.apply_request(lambda: idle)
-        )
+    #      #Simple drive forward auton
+    #     idle = swerve.requests.Idle()
+    #     return cmd.sequence(
+    #         # Reset our field centric heading to match the robot
+    #         # facing away from our alliance station wall (0 deg).
+    #         self.drivetrain.runOnce(
+    #             lambda: self.drivetrain.seed_field_centric(Rotation2d.fromDegrees(0))
+    #         ),
+    #         # Then slowly drive forward (away from us) for 5 seconds.
+    #         self.drivetrain.apply_request(
+    #             lambda: (
+    #                 self._drive.with_velocity_x(0.5)
+    #                 .with_velocity_y(0)
+    #                 .with_rotational_rate(0)
+    #             )
+    #         )
+    #         .withTimeout(5.0),
+    #         # Finally idle for the rest of auton
+    #         self.drivetrain.apply_request(lambda: idle)
+    #     )
